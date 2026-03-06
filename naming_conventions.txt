@@ -1,0 +1,7 @@
+DB schema : 
+
+    table names and column names in camel-case
+
+    fk-index names - fk_{referncing_table}_{referenced_table}
+
+    enum type names are in snake case

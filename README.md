@@ -8,7 +8,7 @@ Assumptions:
             Admin: responsible for updating the stock count whenever the company buys stock 
             Customer: places an order (mock payments - cash on delivery or pre-payment) and recieves the order by delivery 
 
-            Delivery partner : no registration.login based on password.One account for each 3rd party company.All workers of a particular compnay will use the same login. 
+            Delivery partner : no registration.login based on password.One account for each 3rd party company.All workers of a particular company will use the same login. 
 
             future version : 
                   registration of new 3rd party delivery partner 
