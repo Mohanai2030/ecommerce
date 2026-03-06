@@ -9,6 +9,12 @@ services:
             - "5433:5432"
         volumes:
             - ecomdb_vol:/var/lib/postgresql
+            
+    redis:
+        image: redis:8.4.0-alpine
+        restart: always
+        ports:
+        - "6379:6379"
 
 volumes:
     ecomdb_vol:

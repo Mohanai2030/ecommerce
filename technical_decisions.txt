@@ -1,6 +1,8 @@
 db schema assumes that only indian numbers will use the app
 
+or if we want app to support multi nation numbers then 
+
 phone number validation in postgres
-    string
-    in backend we can do phone number validation using google-libphonenumber.
+    
+in backend we can do phone number validation using google-libphonenumber.
 
