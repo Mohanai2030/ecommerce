@@ -5,6 +5,7 @@ import {roles} from '../constants/roles.js'
 import { accessTokenSign, refreshTokenSign, refreshTokenVerify } from '../services/jwt.js';
 import { redisClient } from '../config/redis.js';
 import cookieParser from 'cookie-parser';
+import { addItem, deleteItem, updateItem } from '../services/cart.js';
 
 const userRouter = express.Router();
 
@@ -23,7 +24,7 @@ userRouter.post('/register',async(req,res)=>{
         });
 
         return res.status(200).json({
-            userId:registeredUser.userid,
+            userId:registeredUser.userid
         });
 
     }catch(err){
@@ -51,6 +52,12 @@ userRouter.post('/login',async(req,res)=>{
         if(!isPasswordMatching){
             return res.status(400);
         }
+
+        const userCart = await prisma.cart.create({
+            data:{
+                userid:loginUser.userid,
+            }
+        });
 
         const refreshTokenPayload = {
             'role':roles.user,
@@ -108,6 +115,33 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
         return res.status(400);
     }
 
+})
+
+// user will modify the quantity and we will wait for 5 seconds or a few seconds and api call will be made then the modifyCart functionality will be disabled until the api call is running 
+
+userRouter.put('/cart',async(req,res)=>{
+    const {cartId,fullCart,cartUpdate,cartAdd,cartDelete} = req.body;
+    
+    // list of productIds with the difference .If new product is added to cart then we will send data in cartAdd 
+    
+    // check for negative values 
+    try{
+        const cartAdds = Object.keys(cartAdd).map(toAddItem => addItem(cartId,toAddItem,cartAdd[toAddItem]));
+        const cartUpdates = Object.keys(cartUpdate).map(toUpdateItem => updateItem(cartId,toUpdateItem,cartUpdate[toUpdateItem]))
+        const cartDeletes = Object.keys(cartDelete).map(toDeleteItem => deleteItem(cartId,toDeleteItem))
+        const allModifications = [...cartAdds,...cartUpdates,...cartDeletes];
+        
+        Promise.allSettled(allModifications)
+        .then(successfull => {
+            
+        })
+        .catch(err => {
+
+        })
+    }catch(err){
+
+    }
+    
 })
 
 export {userRouter};

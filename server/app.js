@@ -23,7 +23,26 @@ function wait(seconds){
     })
 }
 
+async function waitWrapper(waitTime){
+    await wait(waitTime);
+    console.log("resolved after ",waitTime)
+    if(Math.random()>0.5){
+        return {
+            'success':false,
+            'error':'randomError'
+        }
+    }else{
+        return {
+            'success':true,
+            'error':null,
+        }
+    }
+}
+
 app.get('/',async(req,res)=>{
+    // let functionArray = [];
+    let waitTimes = [1,4,3,2];
+    waitTimes.map(waitTime => waitWrapper(waitTime));
     return res.send("hello world");
 })
 

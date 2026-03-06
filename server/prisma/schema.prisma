@@ -12,6 +12,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 model admin {
   adminid       String @id @db.Uuid
   adminname     String @db.VarChar(100)
@@ -31,7 +32,7 @@ model assignedorder {
 
 model cart {
   cartid      String        @id @db.Uuid
-  userid      String?       @db.Uuid
+  userid      String?       @unique @db.Uuid
   totalprice  Float         @db.Real
   deliveryfee Float?        @db.Real
   usertable   usertable?    @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cart_usertable")
@@ -108,7 +109,7 @@ model usertable {
   username     String       @db.VarChar(100)
   phone        String       @db.Char(10)
   userpassword String
-  cart         cart[]
+  cart         cart?
   ordertable   ordertable[]
   useraddress  useraddress?
 
