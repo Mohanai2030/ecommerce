@@ -110,4 +110,24 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
 
 })
 
+userRouter.delete('/logout',cookieParser,async(req,res)=>{
+    const userRefreshToken = req.cookies?.['refreshToken'];
+
+    if(!userRefreshToken){
+        return res.status(400);
+    }
+
+    const isTokenValid = refreshTokenVerify(userRefreshToken);
+
+    try{
+        res.clearCookie('refreshToken',{httpOnly:true,expires:'1d'});
+        await redisClient.del(`user:${isTokenValid.id}`)
+        return res.json(200)
+    }catch(err){
+        return res.status(500)
+    }
+})
+
+
+
 export {userRouter};
