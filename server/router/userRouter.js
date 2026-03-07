@@ -6,6 +6,7 @@ import { accessTokenSign, refreshTokenSign, refreshTokenVerify } from '../servic
 import { redisClient } from '../config/redis.js';
 import cookieParser from 'cookie-parser';
 import { addItem, categorizeUpdates, deleteItem, newCartFromSuccessfullUpdates, updateItem } from '../services/cart.js';
+import { userAuthorization } from '../middleware/auth.js';
 
 const userRouter = express.Router();
 
@@ -117,12 +118,31 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
 
 })
 
+
+userRouter.get('/products',async(req,res)=>{
+    const {pageNo,pageSize} = req.query;
+    // pageNo and pageSize must be greather than 0 
+    try{
+        let nextProducts = await prisma.product.findMany({
+            orderBy:{
+                productid:'asc',
+            },
+            include:{
+                productimage:true
+            },
+            skip:pageNo*(pageSize-1),
+            take:pageSize,
+        })
+        return res.status(200).json(nextProducts);
+    }catch(err){
+        return res.status(500);
+    }
+})
+
 // user will modify the quantity and we will wait for 5 seconds or a few seconds and api call will be made then the modifyCart functionality will be disabled until the api call is running 
 
-userRouter.put('/cart',async(req,res)=>{
+userRouter.put('/cart',userAuthorization,async(req,res)=>{
     const {cartId,oldCart,cartUpdate,cartAdd,cartDelete} = req.body;
-    
-    // list of productIds with the difference .If new product is added to cart then we will send data in cartAdd 
     
     // check for negative values 
     try{
