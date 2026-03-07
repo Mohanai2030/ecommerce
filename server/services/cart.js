@@ -29,6 +29,11 @@ async function addItem(cartId,productId,quantity){
 
         return {
             'success':true,
+            'data':{
+                'type':'add',
+                'productId':productId,
+                'quantity':quantity,
+            },
             'error':null,
         };
     }catch(err){
@@ -71,6 +76,11 @@ async function updateItem(cartId,productId,newQuantity){
 
         return {
             'success':true,
+            'data':{
+                'type':'update',
+                'productId':productId,
+                'quantity':newQuantity,
+            },
             'error':null,
         }
     }catch(err){
@@ -92,6 +102,10 @@ async function deleteItem(cartId,productId){
 
         return {
             'success':true,
+            'data':{
+                'type':'delete',
+                'productId':productId
+            },
             'error':null,
         }
 
@@ -105,4 +119,37 @@ async function deleteItem(cartId,productId){
     }
 }
 
-export {addItem,updateItem,deleteItem}
+async function categorizeUpdates(updates){
+    let successfullUpdates = [];
+    let failureUpdates = [];
+    updates.forEach(update => {
+        if(update.value['success']){
+            successfullUpdates.push(update.value);
+        }else{
+            failureUpdates.push(update.value);
+        }
+    })
+    return [successfullUpdates,failureUpdates];
+}
+
+async function newCartFromSuccessfullUpdates(oldCart,successfullUpdates){
+    successfullUpdates.forEach(update => {
+        switch(update['data']['type']){
+            case 'add':{
+                oldCart[update['data']['productId']] = update['data']['quantity'];
+                break;
+            }
+            case 'update':{
+                oldCart[update['data']['productId']] = update['data']['quantity'];
+                break;
+            }
+            case 'delete':{
+                delete oldCart[update['data']['productId']]
+                break;
+            }
+        }
+    });
+    return oldCart;
+}
+
+export {addItem,updateItem,deleteItem,categorizeUpdates,newCartFromSuccessfullUpdates}

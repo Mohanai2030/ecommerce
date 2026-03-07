@@ -25,4 +25,10 @@ if user requests for 4 quantity of a product and we only have 2 - should we not 
 
 what to do if delete product from cart fails?
 
+in update cart route, 
+we can 
+    - either get the full cart data from the frontend itself - network usage 
+    - or make the full cart from the old cart itself - calculation done on server 
+
+
     

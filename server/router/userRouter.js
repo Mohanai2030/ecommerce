@@ -5,7 +5,7 @@ import {roles} from '../constants/roles.js'
 import { accessTokenSign, refreshTokenSign, refreshTokenVerify } from '../services/jwt.js';
 import { redisClient } from '../config/redis.js';
 import cookieParser from 'cookie-parser';
-import { addItem, deleteItem, updateItem } from '../services/cart.js';
+import { addItem, categorizeUpdates, deleteItem, newCartFromSuccessfullUpdates, updateItem } from '../services/cart.js';
 
 const userRouter = express.Router();
 
@@ -120,7 +120,7 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
 // user will modify the quantity and we will wait for 5 seconds or a few seconds and api call will be made then the modifyCart functionality will be disabled until the api call is running 
 
 userRouter.put('/cart',async(req,res)=>{
-    const {cartId,fullCart,cartUpdate,cartAdd,cartDelete} = req.body;
+    const {cartId,oldCart,cartUpdate,cartAdd,cartDelete} = req.body;
     
     // list of productIds with the difference .If new product is added to cart then we will send data in cartAdd 
     
@@ -131,15 +131,25 @@ userRouter.put('/cart',async(req,res)=>{
         const cartDeletes = Object.keys(cartDelete).map(toDeleteItem => deleteItem(cartId,toDeleteItem))
         const allModifications = [...cartAdds,...cartUpdates,...cartDeletes];
         
-        Promise.allSettled(allModifications)
-        .then(successfull => {
-            
-        })
-        .catch(err => {
+        let allUpdates = await Promise.allSettled(allModifications);
+    
+        let [successfullUpdates,failureUpdates] = categorizeUpdates(allUpdates);
+        let currentCart = newCartFromSuccessfullUpdates(oldCart,successfullUpdates);
 
-        })
+        if(failureUpdates.length>0){
+            return res.status(200).json({
+                data:currentCart,
+                error:null
+            });
+        }else{
+            return res.status(200).json({
+                data:currentCart,
+                error:failureUpdates.map(fupdate => fupdate.error)
+            });
+        }
+        
     }catch(err){
-
+        return res.status(500);
     }
     
 })
