@@ -1,11 +1,12 @@
 import express from 'express';
-import { prisma } from '../lib/prisma.js';
-import { roles } from '../constants/roles.js';
-import { accessTokenSign, refreshTokenSign } from '../services/jwt.js';
+import { prisma } from '../../lib/prisma.js';
+import { roles } from '../../constants/roles.js';
+import { accessTokenSign, refreshTokenSign } from '../../services/jwt.js';
 import cookieParser from 'cookie-parser';
-const adminRouter = express.Router();
+import { redisClient } from '../../config/redis.js';
+const adminAuthRouter = express.Router();
 
-adminRouter.post('/login',async(req,res)=>{
+adminAuthRouter.post('/login',async(req,res)=>{
     const {name,phone,password} = req.body;
     
     try{
@@ -52,7 +53,7 @@ adminRouter.post('/login',async(req,res)=>{
     }
 })
 
-adminRouter.get('/refresh',cookieParser,async(req,res)=>{
+adminAuthRouter.get('/refresh',cookieParser,async(req,res)=>{
     const adminRefreshToken = req.cookies?.['refreshToken'];
 
     if(!adminRefreshToken){
@@ -79,7 +80,7 @@ adminRouter.get('/refresh',cookieParser,async(req,res)=>{
     }
 })
 
-adminRouter.delete('/login',cookieParser,async(req,res)=>{
+adminAuthRouter.delete('/login',cookieParser,async(req,res)=>{
     const adminRefreshToken = req.cookies?.['refreshToken'];
 
     if(!adminRefreshToken){
@@ -97,4 +98,4 @@ adminRouter.delete('/login',cookieParser,async(req,res)=>{
     }
 })
 
-export {adminRouter};
+export {adminAuthRouter};
