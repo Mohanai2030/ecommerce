@@ -204,7 +204,11 @@ userRouter.post('/order',userAuthorization,async(req,res)=>{
                             gte:product.quantity
                         }
                     },
-                    
+                    data:{
+                        quantity:{
+                            decrement:product.quantity
+                        }
+                    }
                 })
             ),
             prisma.ordertable.create({
