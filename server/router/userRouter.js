@@ -5,6 +5,8 @@ import {roles} from '../constants/roles.js'
 import { accessTokenSign, refreshTokenSign, refreshTokenVerify } from '../services/jwt.js';
 import { redisClient } from '../config/redis.js';
 import cookieParser from 'cookie-parser';
+import { addItem, calculateDeliveryFee, calculateTotalPrice, categorizeUpdates, deleteItem, newCartFromSuccessfullUpdates, updateItem } from '../services/cart.js';
+import { userAuthorization } from '../middleware/auth.js';
 
 const userRouter = express.Router();
 
@@ -23,7 +25,7 @@ userRouter.post('/register',async(req,res)=>{
         });
 
         return res.status(200).json({
-            userId:registeredUser.userid,
+            userId:registeredUser.userid
         });
 
     }catch(err){
@@ -51,6 +53,12 @@ userRouter.post('/login',async(req,res)=>{
         if(!isPasswordMatching){
             return res.status(400);
         }
+
+        const userCart = await prisma.cart.create({
+            data:{
+                userid:loginUser.userid,
+            }
+        });
 
         const refreshTokenPayload = {
             'role':roles.user,
@@ -128,6 +136,112 @@ userRouter.delete('/logout',cookieParser,async(req,res)=>{
     }
 })
 
+
+userRouter.get('/products',async(req,res)=>{
+    const {pageNo,pageSize} = req.query;
+    // pageNo and pageSize must be greather than 0 
+    try{
+        let nextProducts = await prisma.product.findMany({
+            orderBy:{
+                productid:'asc',
+            },
+            include:{
+                productimage:true
+            },
+            skip:pageNo*(pageSize-1),
+            take:pageSize,
+        })
+        return res.status(200).json(nextProducts);
+    }catch(err){
+        return res.status(500);
+    }
+})
+
+userRouter.post('/order',async(req,res)=>{
+    const {cart} = req.body;
+
+    try{
+        const confirmedItems = await prisma.$transaction([
+            Object.keys(cart).map(product=>
+                prisma.product.update({
+                    where:{
+                        productid:product,
+                        quantity:{
+                            gte:cart[product]
+                        }
+                    },
+                    
+                })
+            )
+        ]);
+
+        const orderCreated = await prisma.ordertable.create({
+            data:{
+                
+            }
+        })
+
+        
+    }catch(err){
+        return res.status(500)
+    }
+
+})
+
+// user will modify the quantity and we will wait for 5 seconds or a few seconds and api call will be made then the modifyCart functionality will be disabled until the api call is running 
+
+userRouter.put('/cart',userAuthorization,async(req,res)=>{
+    const {cartId,oldCart,cartUpdate,cartAdd,cartDelete} = req.body;
+    
+    // check for negative values 
+    try{
+        const cartAdds = Object.keys(cartAdd).map(toAddItem => addItem(cartId,toAddItem,cartAdd[toAddItem]));
+        const cartUpdates = Object.keys(cartUpdate).map(toUpdateItem => updateItem(cartId,toUpdateItem,cartUpdate[toUpdateItem]))
+        const cartDeletes = Object.keys(cartDelete).map(toDeleteItem => deleteItem(cartId,toDeleteItem))
+        const allModifications = [...cartAdds,...cartUpdates,...cartDeletes];
+        
+        let allUpdates = await Promise.allSettled(allModifications);
+    
+        let [successfullUpdates,failureUpdates] = categorizeUpdates(allUpdates);
+        let currentCart = newCartFromSuccessfullUpdates(oldCart,successfullUpdates);
+
+        if(failureUpdates.length>0){
+            return res.status(200).json({
+                data:{
+                    'cart':currentCart,
+                },
+                error:failureUpdates.map(fupdate => fupdate.error)
+            });
+        }
+
+        let totalPrice = calculateTotalPrice(successfullUpdates);
+        let deliveryFee = calculateDeliveryFee(currentCart,totalPrice);
+
+        let updatedCart = await prisma.cart.update({
+            where:{
+                cartid:cartId
+            },
+            data:{
+                deliveryfee:deliveryFee,
+                totalprice:totalPrice
+            }
+        })
+
+        return res.status(200).json({
+            data:{
+                'cart':currentCart,
+                'totalPrice':totalPrice,
+                'deliveryFee':deliveryFee,
+            },
+            error:null
+        });
+        
+        
+    }catch(err){
+        return res.status(500);
+    }
+    
+})
 
 
 export {userRouter};

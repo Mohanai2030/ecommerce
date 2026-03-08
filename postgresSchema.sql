@@ -25,6 +25,7 @@ CREATE TABLE product(
     quantity INT,
     productName VARCHAR(200) NOT NULL,
     produtctDescription TEXT,
+    price REAL NOT NULL,
     UNIQUE(productName)
 );
 
@@ -37,7 +38,7 @@ CREATE TABLE productImage(
 
 CREATE TABLE cart(
     cartId uuid PRIMARY KEY,
-    userId uuid,
+    userId uuid UNIQUE,
     totalPrice real NOT NULL,
     deliveryFee real,
     CONSTRAINT fk_cart_userTable FOREIGN KEY(userId) REFERENCES userTable(userId)
@@ -64,7 +65,7 @@ CREATE TYPE order_status as ENUM('placed','packaged','shipped','readyfordelivery
 
 CREATE TABLE orderTable(
     orderId uuid PRIMARY KEY,
-    userId uuid,
+    userId uuid NOT NULL,
     deliveryFee real,
     totalAmount real NOT NULL,
     orderStatus order_status,
