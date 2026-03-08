@@ -119,19 +119,42 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
 })
 
 userRouter.get('/products',async(req,res)=>{
-    const {pageNo,pageSize} = req.query;
+    const pageNo = req.query.pageNo;
+    const pageSize = req.query.pageSize;
+    const pattern = req.query?.pattern || '';  
     // pageNo and pageSize must be greather than 0 
     try{
-        let nextProducts = await prisma.product.findMany({
-            orderBy:{
-                productid:'asc',
-            },
-            include:{
-                productimage:true
-            },
-            skip:pageNo*(pageSize-1),
-            take:pageSize,
-        })
+        let nextProducts;
+        if(pattern==''){
+            nextProducts = await prisma.product.findMany({
+                orderBy:{
+                    productid:'asc',
+                },
+                include:{
+                    productimage:true
+                },
+                skip:pageNo*(pageSize-1),
+                take:pageSize,
+            })
+        }else{
+            nextProducts = await prisma.product.findMany({
+                where:{
+                    productname:{
+                        startsWith:pattern,
+                    }
+                },
+                orderBy:{
+                    productid:'asc',
+                    productname:'asc'
+                },
+                include:{
+                    productimage:true
+                },
+                skip:pageNo*(pageSize-1),
+                take:pageSize,
+            })
+        }
+
         return res.status(200).json(nextProducts);
     }catch(err){
         return res.status(500);
@@ -193,6 +216,38 @@ userRouter.post('/order',userAuthorization,async(req,res)=>{
         
     }catch(err){
         return res.status(500)
+    }
+
+})
+
+userRouter.get('/orders',userAuthorization,async(req,res)=>{
+    let orderStatus = req.params?.orderStatus || 'pending';
+
+    try{
+        let orders;
+        if(orderStatus=='pending'){
+            orders = await prisma.ordertable.findMany({
+                where:{
+                    userid:req.id,
+                    NOT:{
+                        orderstatus:'delivered'
+                    },
+                }
+            })
+        }else{
+            orders = await prisma.ordertable.findMany({
+                where:{
+                    userid:req.id,
+                    orderstatus:orderStatus
+                }
+            })
+        }
+
+        return res.status(200).json({
+            'data':orders
+        })
+    }catch(err){
+        return res.status(500);
     }
 
 })
