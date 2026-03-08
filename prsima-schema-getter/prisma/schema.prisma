@@ -26,10 +26,10 @@ model assignedorder {
 
 model cart {
   cartid      String        @id @db.Uuid
-  userid      String?       @unique @db.Uuid
+  userid      String        @unique @db.Uuid
   totalprice  Float         @db.Real
   deliveryfee Float?        @db.Real
-  usertable   usertable?    @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cart_usertable")
+  usertable   usertable     @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cart_usertable")
   cartproduct cartproduct[]
 }
 
@@ -66,7 +66,7 @@ model ordertable {
   userid        String          @db.Uuid
   deliveryfee   Float?          @db.Real
   totalamount   Float           @db.Real
-  orderstatus   order_status?
+  orderstatus   order_status
   assignedorder assignedorder[]
   orderproducts orderproducts[]
   usertable     usertable       @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_usertable")
