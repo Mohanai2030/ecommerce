@@ -3,27 +3,78 @@ import dotenv from 'dotenv'
 
 dotenv.config();
 
-export function refreshTokenSign(payload){
+export function refreshTokenSign(payload,userRole){
     return new Promise((resolve,reject)=>{
-        jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET,{expiresIn:'1d'},function(err,signedPayload){
-            if(err){
-                reject(err);
-            }
+        switch(userRole){
+            case 'user':{
+                jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET,{expiresIn:'1d'},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
 
-            resolve(signedPayload);
-        })
+                    resolve(signedPayload);
+                })
+                break;
+            }
+            case 'admin':{
+                jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET,{expiresIn:'12h'},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
+
+                    resolve(signedPayload);
+                })
+                break;
+            }
+            case 'deliveryPartner':{
+                jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET,{expiresIn:'20h'},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
+
+                    resolve(signedPayload);
+                })
+                break;
+            }
+        }
     })
 }
 
-export function accessTokenSign(payload){
+export function accessTokenSign(payload,userRole){
     return new Promise((resolve,reject)=>{
-        jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'},function(err,signedPayload){
-            if(err){
-                reject(err);
-            }
+        switch(userRole){
+            case 'user':{
+                jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
 
-            resolve(signedPayload);
-        })
+                    resolve(signedPayload);
+                })
+                break;
+            }
+            case 'admin':{
+                jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:60*10},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
+
+                    resolve(signedPayload);
+                })
+                break;
+            }
+            case 'deliveryPartner':{
+                jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:60*30},function(err,signedPayload){
+                    if(err){
+                        reject(err);
+                    }
+
+                    resolve(signedPayload);
+                })
+                break;
+            }
+        }
+        
     })
 }
 
