@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model admin {
+  adminid       String @id @db.Uuid
+  adminname     String @db.VarChar(100)
+  phone         String @db.Char(10)
+  adminpassword String
+}
+
+model assignedorder {
+  assignedorderid   String           @id @db.Uuid
+  deliverypartnerid String?          @db.Uuid
+  orderid           String?          @db.Uuid
+  deliverypartner   deliverypartner? @relation(fields: [deliverypartnerid], references: [deliverypartnerid], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignedorder_deliverypartner")
+  ordertable        ordertable?      @relation(fields: [orderid], references: [orderid], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignedorder_order")
+
+  @@unique([deliverypartnerid, orderid])
+}
+
+model cart {
+  cartid      String        @id @db.Uuid
+  userid      String        @unique @db.Uuid
+  totalprice  Float         @db.Real
+  deliveryfee Float?        @db.Real
+  usertable   usertable     @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cart_usertable")
+  cartproduct cartproduct[]
+}
+
+model cartproduct {
+  cartid    String  @db.Uuid
+  productid String  @db.Uuid
+  quantity  Int?
+  cart      cart    @relation(fields: [cartid], references: [cartid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cartproduct_cart")
+  product   product @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_cartproduct_product")
+
+  @@id([cartid, productid])
+}
+
+model deliverypartner {
+  deliverypartnerid       String          @id @db.Uuid
+  deliverypartnername     String          @db.VarChar(200)
+  phone                   String          @db.Char(10)
+  deliverypartnerpassword String
+  assignedorder           assignedorder[]
+}
+
+model orderproducts {
+  orderid    String     @db.Uuid
+  productid  String     @db.Uuid
+  quantity   Int
+  ordertable ordertable @relation(fields: [orderid], references: [orderid], onDelete: NoAction, onUpdate: NoAction, map: "fk_orderproducts_order")
+  product    product    @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_orderproducts_product")
+
+  @@id([orderid, productid])
+}
+
+model ordertable {
+  orderid       String          @id @db.Uuid
+  userid        String          @db.Uuid
+  deliveryfee   Float?          @db.Real
+  totalamount   Float           @db.Real
+  orderstatus   order_status
+  assignedorder assignedorder[]
+  orderproducts orderproducts[]
+  usertable     usertable       @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_usertable")
+}
+
+model product {
+  productid           String          @id @db.Uuid
+  quantity            Int?
+  productname         String          @unique @db.VarChar(200)
+  produtctdescription String?
+  price               Float           @db.Real
+  cartproduct         cartproduct[]
+  orderproducts       orderproducts[]
+  productimage        productimage[]
+}
+
+model productimage {
+  imageid    String   @id @db.Uuid
+  productid  String?  @db.Uuid
+  images3url String
+  product    product? @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_productimages_product")
+}
+
+model useraddress {
+  addressid     String    @id @db.Uuid
+  userid        String?   @db.Uuid
+  addressstring String
+  usertable     usertable @relation(fields: [addressid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_useraddress_usertable")
+
+  @@unique([userid, addressstring])
+}
+
+model usertable {
+  userid       String       @id @db.Uuid
+  username     String       @db.VarChar(100)
+  phone        String       @db.Char(10)
+  userpassword String
+  cart         cart?
+  ordertable   ordertable[]
+  useraddress  useraddress?
+
+  @@unique([username, phone])
+}
+
+enum order_status {
+  placed
+  packaged
+  shipped
+  readyfordelivery
+  deliveryPartnerAssigned
+  outfordelivery
+  delivered
+}
