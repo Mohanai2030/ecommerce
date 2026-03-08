@@ -1,11 +1,12 @@
-import express from 'express';
-import { prisma } from '../lib/prisma.js';
-import { roles } from '../constants/roles.js';
-import { accessTokenSign, refreshTokenSign } from '../services/jwt.js';
+import express from 'express'
+import { prisma } from '../../lib/prisma.js';
+import { roles } from '../../constants/roles.js';
+import { accessTokenSign, refreshTokenSign } from '../../services/jwt.js';
 import cookieParser from 'cookie-parser';
-const deliverypartnerRouter = express.Router();
+import { redisClient } from '../../config/redis.js';
+const deliveryPartnerAuthRouter = express.Router();
 
-deliverypartnerRouter.post('/login',async(req,res)=>{
+deliveryPartnerAuthRouter.post('/login',async(req,res)=>{
     const {name,phone,password} = req.body;
         
     try{
@@ -52,7 +53,7 @@ deliverypartnerRouter.post('/login',async(req,res)=>{
     }
 })
 
-deliverypartnerRouter.get('/refresh',cookieParser,async(req,res)=>{
+deliveryPartnerAuthRouter.get('/refresh',cookieParser,async(req,res)=>{
     const deliveryPartnerRefreshToken = req.cookies?.['refreshToken'];
 
     if(!deliveryPartnerRefreshToken){
@@ -79,7 +80,7 @@ deliverypartnerRouter.get('/refresh',cookieParser,async(req,res)=>{
     }
 })
 
-deliverypartnerRouter.delete('/logout',cookieParser,async(req,res)=>{
+deliveryPartnerAuthRouter.delete('/logout',cookieParser,async(req,res)=>{
     const deliveryPartnerRefreshToken = req.cookies?.['refreshToken'];
 
     if(!deliveryPartnerRefreshToken){
@@ -97,5 +98,4 @@ deliverypartnerRouter.delete('/logout',cookieParser,async(req,res)=>{
     }
 })
 
-
-export {deliverypartnerRouter};
+export {deliveryPartnerAuthRouter};
