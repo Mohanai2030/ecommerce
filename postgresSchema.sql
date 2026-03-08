@@ -25,6 +25,7 @@ CREATE TABLE product(
     quantity INT,
     productName VARCHAR(200) NOT NULL,
     produtctDescription TEXT,
+    price REAL NOT NULL,
     UNIQUE(productName)
 );
 

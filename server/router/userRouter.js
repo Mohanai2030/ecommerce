@@ -5,7 +5,7 @@ import {roles} from '../constants/roles.js'
 import { accessTokenSign, refreshTokenSign, refreshTokenVerify } from '../services/jwt.js';
 import { redisClient } from '../config/redis.js';
 import cookieParser from 'cookie-parser';
-import { addItem, categorizeUpdates, deleteItem, newCartFromSuccessfullUpdates, updateItem } from '../services/cart.js';
+import { addItem, calculateDeliveryFee, calculateTotalPrice, categorizeUpdates, deleteItem, newCartFromSuccessfullUpdates, updateItem } from '../services/cart.js';
 import { userAuthorization } from '../middleware/auth.js';
 
 const userRouter = express.Router();
@@ -139,6 +139,31 @@ userRouter.get('/products',async(req,res)=>{
     }
 })
 
+userRouter.post('/order',async(req,res)=>{
+    const {cart} = req.body;
+
+    try{
+        const confirmedItems = await prisma.$transaction([
+            Object.keys(cart).map(product=>
+                prisma.product.update({
+                    where:{
+                        productid:product,
+                        quantity:{
+                            gte:cart[product]
+                        }
+                    },
+                    
+                })
+            )
+        ]);
+
+        
+    }catch(err){
+        return res.status(500)
+    }
+
+})
+
 // user will modify the quantity and we will wait for 5 seconds or a few seconds and api call will be made then the modifyCart functionality will be disabled until the api call is running 
 
 userRouter.put('/cart',userAuthorization,async(req,res)=>{
@@ -158,15 +183,35 @@ userRouter.put('/cart',userAuthorization,async(req,res)=>{
 
         if(failureUpdates.length>0){
             return res.status(200).json({
-                data:currentCart,
-                error:null
-            });
-        }else{
-            return res.status(200).json({
-                data:currentCart,
+                data:{
+                    'cart':currentCart,
+                },
                 error:failureUpdates.map(fupdate => fupdate.error)
             });
         }
+        
+        let totalPrice = calculateTotalPrice(successfullUpdates);
+        let deliveryFee = calculateDeliveryFee(currentCart,totalPrice);
+
+        let updatedCart = await prisma.cart.update({
+            where:{
+                cartid:cartId
+            },
+            data:{
+                deliveryfee:deliveryFee,
+                totalprice:totalPrice
+            }
+        })
+
+        return res.status(200).json({
+            data:{
+                'cart':currentCart,
+                'totalPrice':totalPrice,
+                'deliveryFee':deliveryFee,
+            },
+            error:null
+        });
+        
         
     }catch(err){
         return res.status(500);

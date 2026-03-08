@@ -1,5 +1,6 @@
 import {prisma} from '../lib/prisma.js'
 import { NotEnoughStockError } from '../errors/stock.js';
+import { deliveryFeeThreshold } from '../constants/deliveryFee.js';
 
 async function addItem(cartId,productId,quantity){
     try{
@@ -7,6 +8,7 @@ async function addItem(cartId,productId,quantity){
             const currentStock  = await tx.product.findFirst({
                 select:{
                     quantity:true,
+                    price:true
                 },
                 where:{
                     productId:productId
@@ -22,7 +24,7 @@ async function addItem(cartId,productId,quantity){
                 data:{
                     cartid:cartId,
                     productid:productId,
-                    quantity:quantity,
+                    quantity:quantity
                 }
             })
         })
@@ -33,6 +35,7 @@ async function addItem(cartId,productId,quantity){
                 'type':'add',
                 'productId':productId,
                 'quantity':quantity,
+                'totalPrice':quantity*currentStock.price
             },
             'error':null,
         };
@@ -80,6 +83,7 @@ async function updateItem(cartId,productId,newQuantity){
                 'type':'update',
                 'productId':productId,
                 'quantity':newQuantity,
+                'totalPrice':newQuantity*currentStock.price
             },
             'error':null,
         }
@@ -132,7 +136,7 @@ async function categorizeUpdates(updates){
     return [successfullUpdates,failureUpdates];
 }
 
-async function newCartFromSuccessfullUpdates(oldCart,successfullUpdates){
+function newCartFromSuccessfullUpdates(oldCart,successfullUpdates){
     successfullUpdates.forEach(update => {
         switch(update['data']['type']){
             case 'add':{
@@ -152,4 +156,16 @@ async function newCartFromSuccessfullUpdates(oldCart,successfullUpdates){
     return oldCart;
 }
 
-export {addItem,updateItem,deleteItem,categorizeUpdates,newCartFromSuccessfullUpdates}
+function calculateTotalPrice(successfullUpdates){
+    let totalCartPrice = successfullUpdates.reduce((sumTillNow,update) => sumTillNow+update['data']['totalPrice'],0)
+}
+
+function calculateDeliveryFee(cart,totalPrice){
+    if(totalPrice<deliveryFeeThreshold){
+        return 50;
+    }else{
+        return 0;
+    }
+}
+
+export {addItem,updateItem,deleteItem,categorizeUpdates,newCartFromSuccessfullUpdates,calculateTotalPrice,calculateDeliveryFee}
