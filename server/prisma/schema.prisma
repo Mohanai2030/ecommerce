@@ -100,7 +100,7 @@ model useraddress {
   userid        String?   @db.Uuid
   addressstring String
   usertable     usertable @relation(fields: [addressid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_useraddress_usertable")
-
+  
   @@unique([userid, addressstring])
 }
 
