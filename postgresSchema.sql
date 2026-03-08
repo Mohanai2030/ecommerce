@@ -38,7 +38,7 @@ CREATE TABLE productImage(
 
 CREATE TABLE cart(
     cartId uuid PRIMARY KEY,
-    userId uuid UNIQUE,
+    userId uuid UNIQUE NOT NULL,
     totalPrice real NOT NULL,
     deliveryFee real,
     CONSTRAINT fk_cart_userTable FOREIGN KEY(userId) REFERENCES userTable(userId)
@@ -68,7 +68,7 @@ CREATE TABLE orderTable(
     userId uuid NOT NULL,
     deliveryFee real,
     totalAmount real NOT NULL,
-    orderStatus order_status,
+    orderStatus order_status NOT NULL,
     CONSTRAINT fk_order_userTable FOREIGN KEY(userId) REFERENCES userTable(userId)
 );
 

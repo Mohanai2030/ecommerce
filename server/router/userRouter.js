@@ -118,7 +118,6 @@ userRouter.get('/refresh',cookieParser,async(req,res)=>{
 
 })
 
-
 userRouter.get('/products',async(req,res)=>{
     const {pageNo,pageSize} = req.query;
     // pageNo and pageSize must be greather than 0 
@@ -139,28 +138,56 @@ userRouter.get('/products',async(req,res)=>{
     }
 })
 
-userRouter.post('/order',async(req,res)=>{
-    const {cart} = req.body;
+userRouter.post('/order',userAuthorization,async(req,res)=>{
+    const {cartId} = req.body;
 
     try{
-        const confirmedItems = await prisma.$transaction([
-            Object.keys(cart).map(product=>
+
+        const orderCart = await prisma.cart.findFirst({
+            include:{
+                cartproduct:true,
+            },
+            where:{
+                cartid:cartId,
+                userid:req.id,
+            }
+        })
+
+        const orderPlacedItemsandconfirmedOrder = await prisma.$transaction([
+            ...Object.keys(orderCart.cartproduct).map(product=>
                 prisma.product.update({
                     where:{
-                        productid:product,
+                        productid:product.productid,
                         quantity:{
-                            gte:cart[product]
+                            gte:product.quantity
                         }
                     },
                     
                 })
-            )
+            ),
+            prisma.ordertable.create({
+                data:{
+                    userid:req.id,
+                    deliveryfee:orderCart.deliveryfee,
+                    totalamount:orderCart.totalprice,
+                    orderstatus:'placed',
+                    orderproducts:{
+                        create:[...orderCart.cartproduct.map(product => {
+                            return{
+                                productid:product.productid,
+                                quantity:product.quantity
+                            }
+                        })]
+                    }
+                }
+            })
         ]);
+        
+        
+        const confirmedOrder = orderPlacedItemsandconfirmedOrder.at[-1];
 
-        const orderCreated = await prisma.ordertable.create({
-            data:{
-                
-            }
+        return res.status(200).json({
+            'data':confirmedOrder.orderId
         })
 
         
