@@ -6,3 +6,29 @@ phone number validation in postgres
     
 in backend we can do phone number validation using google-libphonenumber.
 
+
+api call for cartUpdate everytime will ensure proper correctness at the cost of smoothness of ux. so i have prioritised ux smoothness and cartUpdate api will be called only 5 seconds after user updates the cart 
+
+update_cart : delete all and insert all products as new vs update each and only insert for new values 
+
+quantity of a product in cart must be greater than or equal to the total qunatity of that product in the inventory. 
+
+
+to be very sure of not "potential_overselling"
+    - can every 30 mins check with backend whether cartquantity<inventoryquantity. 
+
+    - we will have to ensure repeatable read for cartquantity<inventoryquantity but that may result in postgres aborting the transaction and we will have to end up retrying - this might increase the load on db and maybe also on server bcoz it has to retry because of network calls and user might feel our application is taking too much time for just a cart update.  
+
+    - we are going to prioritize speed of cartUpdate and sacrifice consistency of cartquantity<inventoryquantity during updates . we are not going to use read committed . 
+
+if user requests for 4 quantity of a product and we only have 2 - should we not update the cart at all or update it to how much ever stock is available and show them the price ? 
+
+what to do if delete product from cart fails?
+
+in update cart route, 
+we can 
+    - either get the full cart data from the frontend itself - network usage 
+    - or make the full cart from the old cart itself - calculation done on server 
+
+
+    

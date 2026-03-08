@@ -10,6 +10,9 @@ dotenv.config();
 const app = express();
 
 app.get('/',async(req,res)=>{
+    // let functionArray = [];
+    let waitTimes = [1,4,3,2];
+    waitTimes.map(waitTime => waitWrapper(waitTime));
     return res.send("hello world");
 })
 
