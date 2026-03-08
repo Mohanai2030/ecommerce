@@ -1,4 +1,4 @@
-This is a clone of Amazon e-commerce with mock payments.
+This is an e-commerce application.There were a few assumptions made when developing this application
 
 Assumptions: 
       1. Unlike amazon,This isnt a marketplace where sellers also can list or store their items in amazon warehouses  
