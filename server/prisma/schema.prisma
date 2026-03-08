@@ -12,7 +12,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 model admin {
   adminid       String @id @db.Uuid
   adminname     String @db.VarChar(100)
@@ -69,13 +68,13 @@ model orderproducts {
 
 model ordertable {
   orderid       String          @id @db.Uuid
-  userid        String?         @db.Uuid
+  userid        String          @db.Uuid
   deliveryfee   Float?          @db.Real
   totalamount   Float           @db.Real
   orderstatus   order_status?
   assignedorder assignedorder[]
   orderproducts orderproducts[]
-  usertable     usertable?      @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_usertable")
+  usertable     usertable       @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_usertable")
 }
 
 model product {

@@ -157,6 +157,12 @@ userRouter.post('/order',async(req,res)=>{
             )
         ]);
 
+        const orderCreated = await prisma.ordertable.create({
+            data:{
+                
+            }
+        })
+
         
     }catch(err){
         return res.status(500)
@@ -189,7 +195,7 @@ userRouter.put('/cart',userAuthorization,async(req,res)=>{
                 error:failureUpdates.map(fupdate => fupdate.error)
             });
         }
-        
+
         let totalPrice = calculateTotalPrice(successfullUpdates);
         let deliveryFee = calculateDeliveryFee(currentCart,totalPrice);
 
@@ -218,5 +224,6 @@ userRouter.put('/cart',userAuthorization,async(req,res)=>{
     }
     
 })
+
 
 export {userRouter};

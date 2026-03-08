@@ -65,7 +65,7 @@ CREATE TYPE order_status as ENUM('placed','packaged','shipped','readyfordelivery
 
 CREATE TABLE orderTable(
     orderId uuid PRIMARY KEY,
-    userId uuid,
+    userId uuid NOT NULL,
     deliveryFee real,
     totalAmount real NOT NULL,
     orderStatus order_status,
