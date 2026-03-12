@@ -41,6 +41,34 @@ adminRouter.post('/product',async(req,res)=>{
     }
 })
 
+adminAuthRouter.put('/orderstatus',async(req,res)=>{
+    const {orderId,newStatus} = req.body;
+    const possibleOrderStatus = ['placed','packaged','shipped','readyfordelivery','deliveryPartnerAssigned','outfordelivery','delivered'];
+
+    if(!possibleOrderStatus.includes(newStatus)){
+        return res.status(400).json({
+            'error':"Invalid order update request"
+        })
+    }
+
+    try{
+        const updatedOrder = await prisma.ordertable.update({
+            where:{
+                orderid:orderId
+            },
+            data:{
+                orderstatus:newStatus
+            }
+        })
+
+        return res.status(200).json({
+            'data':updatedOrder
+        })
+    }catch(err){
+        return res.status(500)
+    }
+})
+
 adminRouter.put('/product',async(req,res)=>{
     const updateQueryObject = updateProductQueryBuilder(req.body);
     try{
